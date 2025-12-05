@@ -44,9 +44,9 @@ ARGS2 := $(NODES) $(EDGES) $(START) $(END) $(ALGO2) # Feasible
 ARGS4 := $(NODES2) $(EDGES2) $(START) $(END) $(ALGO2) # Infeasible
 ARGS5 := $(NODES3) $(EDGES3) $(START) $(END) $(ALGO2) # Short Violation
 # 1.2 Dijkstra's
-ARGS6 := $(NODES4) $(EDGES4) $(DESTINATIONS) $(THRESHOLD) $(ALGO2) # 10% Longer
-ARGS7 := $(NODES4) $(EDGES4) $(DESTINATIONS) $(THRESHOLD2) $(ALGO2) # 30% longer
-ARGS8 := $(NODES4) $(EDGES4) $(DESTINATIONS) $(THRESHOLD3) $(ALGO2) # 60% longer
+ARGS6 := $(NODES4) $(EDGES4) $(START) $(DESTINATIONS) $(THRESHOLD) $(ALGO2) # 10% Longer
+ARGS7 := $(NODES4) $(EDGES4) $(START) $(DESTINATIONS) $(THRESHOLD2) $(ALGO2) # 30% longer
+ARGS8 := $(NODES4) $(EDGES4) $(START) $(DESTINATIONS) $(THRESHOLD3) $(ALGO2) # 60% longer
 
 	
 # Virtualenv directory (optional)

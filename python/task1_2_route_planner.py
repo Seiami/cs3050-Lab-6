@@ -105,42 +105,27 @@ def dijkstra_vanilla(graph: Graph, start: int, end: int) -> Tuple[Dict[int, floa
     I altered the function parameters to fit the input of a dictionary for priorities and a threshold for the priority-respecting path length.
     I decided that a dictionary was the best way to keep the destinations together with their priorities in a clearly related way.
 '''
-def dijkstra(graph: Graph, dests: Dict[int, str], threshold: float) -> Tuple[Dict[int, float], Dict[int, Optional[int]], int]:
-    """
-    Dijkstra's algorithm for shortest path
-    Returns: (distances, previous nodes, nodes explored)
-    """
-    dist = {node_id: float('inf') for node_id in graph.nodes}
-    prev = {node_id: None for node_id in graph.nodes}
-    dist[start] = 0
-    
-    pq = [(0, start)]
-    nodes_explored = 0
-    visited = set()
+def dijkstra(graph: Graph, start: int, dests: List[Tuple[int, str]], threshold: float) -> Tuple[Dict[int, float], Dict[int, Optional[int]], int]:
+    print("=== Dijkstra's Algorithm ===")
+
+    distance = 0
+    prev = {}
+
+    # Put all of the destinations we need to visit into a list
+    to_visit = Tuple[int, str]
+    for destination, priority in dests.items():
+        to_visit[i] = destination
+        i += 1
     
     while pq:
-        current_dist, u = heapq.heappop(pq)
         
-        if u in visited:
-            continue
-        
-        visited.add(u)
-        nodes_explored += 1
-        
-        if u == end:
-            break
-        
-        if current_dist > dist[u]:
-            continue
-        
-        for edge in graph.adj_list.get(u, []):
-            v = edge.to
-            alt = dist[u] + edge.weight
-            
-            if alt < dist[v]:
-                dist[v] = alt
-                prev[v] = u
-                heapq.heappush(pq, (alt, v))
+        dist, prev, _ = dijkstra_vanilla(graph, start, )
+
+
+
+    # Print results
+    print_path(graph, prev, start_node, end_node, dist[end_node])
+
     
     return total_dist, route, priority_violations
     
@@ -289,15 +274,16 @@ def load_graph(nodes_file: str, edges_file: str) -> Graph:
 
 def main():
     if len(sys.argv) != 6:
-        print(f"Usage: {sys.argv[0]} <nodes.csv> <edges.csv> <start_node> <end_node> <algorithm>")
+        print(f"Usage: {sys.argv[0]} <nodes.csv> <edges.csv> <start_node> <destinations.csv> <algorithm>")
         print("Algorithms: dijkstra, astar, bellman-ford")
         sys.exit(1)
 
     nodes_file = sys.argv[1]
     edges_file = sys.argv[2]
-    destinations_file = sys.argv[3]
-    threshhold = sys.argv[4]
-    algorithm = sys.argv[5]
+    start = sys.argv[3]
+    destinations_file = sys.argv[4]
+    threshhold = sys.argv[5]
+    algorithm = sys.argv[6]
     
     # Load graph
     graph = load_graph(nodes_file, edges_file)
@@ -306,9 +292,10 @@ def main():
     destinations = {}
 
     with open(destinations_file, "r") as f:
-        reader = csv.DictReader(f)
+        reader = csv.reader(f)
+        next(reader)  # skip header row
         for row in reader:
-            destinations[int(row["destination"])] = row["priority"]
+            data.append([int(row[0]), row[1]])
     
     # Validate nodes
     if start_node not in graph.nodes or end_node not in graph.nodes:
@@ -317,8 +304,11 @@ def main():
     
     # Run selected algorithm
     if algorithm == "dijkstra":
-        print("=== Dijkstra's Algorithm ===")
-        dist, prev, nodes_explored = dijkstra(graph, destinations, threshold)
+        total_dist, route, priority_violations = dijkstra(graph, start, destinations, threshold)
+
+
+
+
     elif algorithm == "astar":
         print("=== A* Algorithm ===")
         dist, prev, nodes_explored = astar(graph, start_node, end_node)
@@ -332,10 +322,6 @@ def main():
         print(f"Unknown algorithm: {algorithm}")
         print("Available algorithms: dijkstra, astar, bellman-ford")
         sys.exit(1)
-    
-    # Print results
-    print_path(graph, prev, start_node, end_node, dist[end_node])
-    print(f"Nodes explored: {nodes_explored}")
 
 
 if __name__ == "__main__":
