@@ -14,10 +14,12 @@ EARTH_RADIUS = 6371.0  # km
 
 class Node:
     """Represents a node in the graph"""
-    def __init__(self, node_id: int, lat: float, lon: float):
+    def __init__(self, node_id: int, lat: float, lon: float, earliest: float, latest: float):
         self.id = node_id
         self.lat = lat
         self.lon = lon
+        self.earliest = earliest
+        self.latest = latest
 
 
 class Edge:
@@ -33,9 +35,9 @@ class Graph:
         self.nodes: Dict[int, Node] = {}
         self.adj_list: Dict[int, List[Edge]] = {}
     
-    def add_node(self, node_id: int, lat: float, lon: float):
+    def add_node(self, node_id: int, lat: float, lon: float, earliest: float, latest: float):
         """Add a node to the graph"""
-        self.nodes[node_id] = Node(node_id, lat, lon)
+        self.nodes[node_id] = Node(node_id, lat, lon, earliest, latest)
         if node_id not in self.adj_list:
             self.adj_list[node_id] = []
     
@@ -58,6 +60,10 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return EARTH_RADIUS * c
 
 
+'''
+    I decided to use Dijkstra's algorithm for this route planner because, as we are simulating real travel on roads, distances cannot be negative.
+    Therefore, I do not need the more complex A* or Bellman-Ford to handle negative edge weights, and Dijkstra's is the simplest and easiest to work with.
+'''
 def dijkstra(graph: Graph, start: int, end: int) -> Tuple[Dict[int, float], Dict[int, Optional[int]], int]:
     """
     Dijkstra's algorithm for shortest path
@@ -83,17 +89,21 @@ def dijkstra(graph: Graph, start: int, end: int) -> Tuple[Dict[int, float], Dict
         if u == end:
             break
         
-        if current_dist > dist[u]:
+        if current_dist > dist[u]: # If we already have an edge to this vertex, ensure we only replace the distance if the new edge is shorter
             continue
         
-        for edge in graph.adj_list.get(u, []):
+        for edge in graph.adj_list.get(u, []): # Add edges adjacent to the current node to the pq
             v = edge.to
             alt = dist[u] + edge.weight
-            
-            if alt < dist[v]:
-                dist[v] = alt
-                prev[v] = u
-                heapq.heappush(pq, (alt, v))
+            if alt >= graph.nodes[v].earliest and alt <= graph.nodes[v].latest: # Only update a path if it falls within the traveled-to node's arrival window
+                if alt < dist[v]: # If (the known shortest distance to the current node + the adj edge weight) is LESS THAN (the known distance to the node that edge points to)
+                    dist[v] = alt # Update known shortest distance to the current node
+                    prev[v] = u # Update previous node on the shortest path through v
+                    if alt < graph.nodes[end].latest: # Only push nodes to pq that will not arrive too late
+                        heapq.heappush(pq, (alt, v))
+
+        if not pq: # The priority queue is empty, then there are no edges from here that are short enough to get us to the end node on before its latest time
+                print("Too Late or Too Early -- No feasible path!")
     
     return dist, prev, nodes_explored
 
@@ -225,7 +235,9 @@ def load_graph(nodes_file: str, edges_file: str) -> Graph:
             node_id = int(row['id'])
             lat = float(row['lat'])
             lon = float(row['lon'])
-            graph.add_node(node_id, lat, lon)
+            earliest = float(row['earliest'])
+            latest = float(row['latest'])
+            graph.add_node(node_id, lat, lon, earliest, latest)
     
     # Load edges
     with open(edges_file, 'r') as f:
@@ -263,15 +275,6 @@ def main():
     if algorithm == "dijkstra":
         print("=== Dijkstra's Algorithm ===")
         dist, prev, nodes_explored = dijkstra(graph, start_node, end_node)
-    elif algorithm == "astar":
-        print("=== A* Algorithm ===")
-        dist, prev, nodes_explored = astar(graph, start_node, end_node)
-    elif algorithm == "bellman-ford":
-        print("=== Bellman-Ford Algorithm ===")
-        dist, prev, nodes_explored = bellman_ford(graph, start_node, end_node)
-        if dist is None:
-            print("Negative cycle detected!")
-            sys.exit(1)
     else:
         print(f"Unknown algorithm: {algorithm}")
         print("Available algorithms: dijkstra, astar, bellman-ford")

@@ -11,20 +11,42 @@ SHELL := /bin/bash
 
 # ---- Config (override any of these on the command line) ---------------------
 PYTHON ?= python3
-SCRIPT ?= route_planner.py
+SCRIPT1 ?= task1_1_route_planner.py
+SCRIPT2 ?= task1_2_route_planner.py
 
 DATA_DIR ?= ../data
-NODES ?= $(DATA_DIR)/nodes.csv
-EDGES ?= $(DATA_DIR)/edges.csv
+
+EDGES ?= $(DATA_DIR)/task1_1_feasibleEDGES.csv
+NODES ?= $(DATA_DIR)/task1_1_feasibleNODES.csv
+EDGES ?= $(DATA_DIR)/task1_1_feasibleEDGES.csv
+NODES2 ?= $(DATA_DIR)/task1_1_infeasibleNODES.csv
+EDGES2 ?= $(DATA_DIR)/task1_1_infeasibleEDGES.csv
+NODES3 ?= $(DATA_DIR)/task1_1_short_violationNODES.csv
+EDGES3 ?= $(DATA_DIR)/task1_1_short_violationEDGES.csv
+
+EDGES4 ?= $(DATA_DIR)/edges.csv
+NODES4 ?= $(DATA_DIR)/nodes.csv
+DESTINATIONS ?= $(DATA_DIR)/destinations.csv
+
 START ?= 1
-END   ?= 3
+END   ?= 6
+THRESHOLD ?= 0.1
+THRESHOLD2 ?= 0.3
+THRESHOLD3 ?= 0.6
 ALGO  ?= bellman-ford
 ALGO2  ?= dijkstra
 ALGO3  ?= astar
 
 ARGS := $(NODES) $(EDGES) $(START) $(END) $(ALGO)
-ARGS2 := $(NODES) $(EDGES) $(START) $(END) $(ALGO2)
 ARGS3 := $(NODES) $(EDGES) $(START) $(END) $(ALGO3)
+# 1.1 Dijkstra's
+ARGS2 := $(NODES) $(EDGES) $(START) $(END) $(ALGO2) # Feasible
+ARGS4 := $(NODES2) $(EDGES2) $(START) $(END) $(ALGO2) # Infeasible
+ARGS5 := $(NODES3) $(EDGES3) $(START) $(END) $(ALGO2) # Short Violation
+# 1.2 Dijkstra's
+ARGS6 := $(NODES4) $(EDGES4) $(DESTINATIONS) $(THRESHOLD) $(ALGO2) # 10% Longer
+ARGS7 := $(NODES4) $(EDGES4) $(DESTINATIONS) $(THRESHOLD2) $(ALGO2) # 30% longer
+ARGS8 := $(NODES4) $(EDGES4) $(DESTINATIONS) $(THRESHOLD3) $(ALGO2) # 60% longer
 
 	
 # Virtualenv directory (optional)
@@ -36,10 +58,13 @@ VENV_PY  := $(VENV_DIR)/bin/python
 
 # Default target
 run: check ## Run the route planner with defaults (override START/END/NODES/EDGES)
-	@echo "▶ Running: $(PYTHON) $(SCRIPT) $(ARGS)"
-	@$(PYTHON) $(SCRIPT) $(ARGS)
-	@$(PYTHON) $(SCRIPT) $(ARGS2)
-	@$(PYTHON) $(SCRIPT) $(ARGS3)
+	@echo "~~~~~~~~~~~~~ TASK 1.1 ~~~~~~~~~~~~~"
+	@$(PYTHON) $(SCRIPT1) $(ARGS2)
+	@$(PYTHON) $(SCRIPT1) $(ARGS4)
+	@$(PYTHON) $(SCRIPT1) $(ARGS5)
+	@echo "~~~~~~~~~~~~~ TASK 1.2 ~~~~~~~~~~~~~"
+	@$(PYTHON) $(SCRIPT2) $(ARGS6)
+
 
 run-venv: check ## Run using the virtualenv's Python
 	@test -x "$(VENV_PY)" || { echo "No $(VENV_PY). Run 'make venv' first."; exit 1; }
@@ -52,7 +77,8 @@ venv: ## Create a local virtual environment (.venv) and upgrade pip
 	@echo "✔ Created $(VENV_DIR). Use 'make run-venv' to run with it."
 
 check: ## Verify required files exist
-	@test -f "$(SCRIPT)" || { echo "Missing script: $(SCRIPT)"; exit 1; }
+	@test -f "$(SCRIPT1)" || { echo "Missing script: $(SCRIPT1)"; exit 1; }
+	@test -f "$(SCRIPT2)" || { echo "Missing script: $(SCRIPT2)"; exit 1; }
 	@test -f "$(NODES)"  || { echo "Missing nodes CSV: $(NODES)"; exit 1; }
 	@test -f "$(EDGES)"  || { echo "Missing edges CSV: $(EDGES)"; exit 1; }
 
