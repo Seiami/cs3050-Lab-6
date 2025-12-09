@@ -111,13 +111,18 @@ def dijkstra(graph: Graph, start: int, dests: List[Tuple[int, str]], threshold: 
     distance = 0
     prev = {}
 
-    # Put all of the destinations we need to visit into a list
-    to_visit = Tuple[int, str]
-    for destination, priority in dests.items():
-        to_visit[i] = destination
-        i += 1
+    # Put all of the destinations we need to visit into a list. Turn their priorities into a number for easier parsing.
+    to_visit = []
+    for destination, priority in dests:
+        if priority == "HIGH":
+            to_visit.append([destination, 1])
+        elif priority == "MEDIUM":
+            to_visit.append([destination, 0])
+        elif priority == "LOW":
+            to_visit.append([destination, -1])
     
-    while pq:
+    visited =[] # A list of all of the nodes we have visited out of our destination list
+    for i in to_visit:
         
         dist, prev, _ = dijkstra_vanilla(graph, start, )
 
